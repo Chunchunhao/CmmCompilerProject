@@ -684,6 +684,47 @@ void checkexpression( Expression * expr, SymbolTable * table )
         convertType(left, type);//left->type = type;//converto
         convertType(right, type);//right->type = type;//converto
         expr->type = type;
+        
+        // print_expr(expr);
+        if( ((left->v).type == IntConst && 
+            (right->v).type == IntConst )||
+            ((left->v).type == FloatConst && 
+            (right->v).type == FloatConst )) {
+            switch((expr->v).type){
+                case PlusNode:
+                    (expr->v).type = (left->v).type;
+                    if( (expr->v).type == IntConst)
+                        (expr->v).val.ivalue = (left->v).val.ivalue + (right->v).val.ivalue;
+                    else if( expr->v.type == FloatConst )
+                        (expr->v).val.fvalue = (left->v).val.fvalue + (right->v).val.fvalue;
+                    break;
+                case MinusNode:
+                    (expr->v.type) = (left->v).type;
+                    if( (expr->v).type == IntConst)
+                        (expr->v).val.ivalue = (left->v).val.ivalue - (right->v).val.ivalue;
+                    else if( expr->v.type == FloatConst )
+                        (expr->v).val.fvalue = (left->v).val.fvalue - (right->v).val.fvalue;
+                    break;
+                case MulNode:
+                    (expr->v.type) = (left->v).type;
+                    if( (expr->v).type == Int)
+                        (expr->v).val.ivalue = (left->v).val.ivalue * (right->v).val.ivalue;
+                    else if( expr->v.type == FloatConst )
+                        (expr->v).val.fvalue = (left->v).val.fvalue * (right->v).val.fvalue;
+                    break;
+                case DivNode:
+                    (expr->v.type) = (left->v).type;
+                    if( (expr->v).type == IntConst)
+                        (expr->v).val.ivalue = (left->v).val.ivalue / (right->v).val.ivalue;
+                    else if( expr->v.type == FloatConst )
+                        (expr->v).val.fvalue = (left->v).val.fvalue / (right->v).val.fvalue;
+                default:
+                    printf("error ");
+                    break;
+            }
+            expr->leftOperand = NULL;
+            expr->rightOperand = NULL;
+        }
     }
 }
 
@@ -832,16 +873,16 @@ void print_expr(Expression *expr)
                 printf("%f ", (expr->v).val.fvalue);
                 break;
             case PlusNode:
-                printf("+ ");
+                printf("\'+\' ");
                 break;
             case MinusNode:
-                printf("- ");
+                printf("\'-\' ");
                 break;
             case MulNode:
-                printf("* ");
+                printf("\'*\' ");
                 break;
             case DivNode:
-                printf("/ ");
+                printf("\'/\' ");
                 break;
             case IntToFloatConvertNode:
                 printf("(float) ");
