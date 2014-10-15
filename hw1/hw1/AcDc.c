@@ -879,8 +879,11 @@ void fprint_expr( FILE *target, Expression *expr, SymbolTable* table)
                 if( (expr->v).si == -1){
                     fprintf(target,"-1.0\n" );
                     fprintf(target,"l%c\n", getRegister(table, (expr->v).val.id));
-                    fprintf(target,"5k\n" );
+                    fprintf(target,"5 k\n" );
                     fprintf(target,"*\n" );
+                }
+                else {
+                    fprintf(target,"l%c\n", getRegister(table, (expr->v).val.id));
                 }
                 break;
             case IntConst:
@@ -897,7 +900,7 @@ void fprint_expr( FILE *target, Expression *expr, SymbolTable* table)
     else{
         fprint_expr(target, expr->leftOperand, table);
         if(expr->rightOperand == NULL){
-            fprintf(target,"5k\n");
+            fprintf(target,"5 k\n");
         }
         else{
             //  fprint_right_expr(expr->rightOperand);
