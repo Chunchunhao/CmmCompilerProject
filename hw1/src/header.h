@@ -61,6 +61,7 @@ typedef struct Value{
         int ivalue;                /* for integer constant in the expression */
         float fvalue;              /* for float constant */
     }val;
+    float si;
 }Value;
 
 

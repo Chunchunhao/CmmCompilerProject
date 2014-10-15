@@ -134,6 +134,7 @@ Token scanner( FILE *source )
             c = fgetc(source);
         }
 // MODIFY FIN
+        printf(" ==[ %c ]==", c);
         if( isdigit(c) )
             return getNumericToken(source, c);
 
@@ -141,7 +142,6 @@ Token scanner( FILE *source )
 //
         if( isalpha(c) )// islower -> isalpha
             return getAlphabeticToken(source, c);
-
 
         switch(c){
             case '=':
@@ -241,8 +241,9 @@ Declarations *parseDeclarations( FILE *source )
 
 Expression *parseValue( FILE *source )
 {
+    /*
     Token next_token = scanner(source);
-    float signedbit = 1;
+    int signedbit = 1;
     while(1){
         if(next_token.type == PlusOp){
             signedbit *= 1;
@@ -257,30 +258,26 @@ Expression *parseValue( FILE *source )
             break;
         }
     }
-
+    */
     Token token = scanner(source);
     Expression *value = (Expression *)malloc( sizeof(Expression) );
     value->leftOperand = value->rightOperand = NULL;
-
     switch(token.type){
         case Alphabet:
             (value->v).type = Identifier; ///////////////////////////////////
             (value->v).val.id = storeName( token.tok );
-            if( signedbit == -1)
-                (value->v).si = -1;
-            else
-                (value->v).si = 1;
             // (value->v).val.id = token.tok[0];
             break;
         case IntValue:
             (value->v).type = IntConst;
-            (value->v).val.ivalue = atoi(token.tok) * signedbit;
+            (value->v).val.ivalue = atoi(token.tok) ;
             break;
         case FloatValue:
             (value->v).type = FloatConst;
-            (value->v).val.fvalue = atof(token.tok) * signedbit;
+            (value->v).val.fvalue = atof(token.tok) ;
             break;
         default:
+            printf("token tpye is : %c\n", token.tok[0]);
             printf("Syntax Error: Expect Identifier or a Number %s\n", token.tok);
             exit(1);
     }
@@ -289,25 +286,96 @@ Expression *parseValue( FILE *source )
 }
 // HW 1
 Expression *parseTermTail( FILE *source, Expression *lvalue ) {
-   
-    Token token = scanner(source);
-    Expression *expr;
+    printf("\n Term: ");
+    print_expr(lvalue);
 
+    Token token = scanner(source);
+    Token next_token;
+    Expression *expr, *value, *zeroo;;
+    int signedbit = 1;
     switch(token.type){
         case MulOp:
             expr = (Expression *)malloc( sizeof(Expression) );
             (expr->v).type = MulNode;
             (expr->v).val.op = Mul;
-            expr->leftOperand = lvalue;
-            expr->rightOperand = parseValue(source);
+            expr->leftOperand = lvalue; // expr->rightOperand = parseValue(source);
+            token = scanner(source);
+            while(1) {
+                if(next_token.type == PlusOp){
+                    signedbit *= 1;
+                    next_token = scanner(source);
+                }
+                else if(next_token.type == MinusOp){
+                    signedbit *= -1;
+                    next_token = scanner(source);
+                }
+                else {
+                    ungetc(next_token.tok[0], source);
+                    break;
+                }
+            }
+            if(signedbit == -1){
+                zeroo = (Expression *)malloc( sizeof(Expression) );
+                (zeroo->v).type = IntConst;
+                (zeroo->v).val.ivalue = -1;
+                zeroo->leftOperand = NULL ; // expr->rightOperand = parseValue(source);
+                zeroo->rightOperand = NULL ;
+                
+                value = (Expression *)malloc( sizeof(Expression) );
+                (value->v).type = MulNode;
+                (value->v).val.ivalue = 0;
+                value->leftOperand = zeroo ; // expr->rightOperand = parseValue(source);
+                value->rightOperand = parseValue(source) ;
+                expr->rightOperand = value;
+            }
+            else{
+                expr->rightOperand = parseValue(source);
+            }
             return parseTermTail(source, expr);
+            // expr->leftOperand = lvalue;
+            // expr->rightOperand = parseValue(source);
+            // return parseTermTail(source, expr);
         case DivOp:
             expr = (Expression *)malloc( sizeof(Expression) );
             (expr->v).type = DivNode;
             (expr->v).val.op = Div;
-            expr->leftOperand = lvalue;
-            expr->rightOperand = parseValue(source);
+            expr->leftOperand = lvalue; // expr->rightOperand = parseValue(source);
+            next_token = scanner(source);
+            while(1) {
+                if(next_token.type == PlusOp){
+                    signedbit *= 1;
+                    next_token = scanner(source);
+                }
+                else if(next_token.type == MinusOp){
+                    signedbit *= -1;
+                    next_token = scanner(source);
+                }
+                else {
+                    ungetc(next_token.tok[0], source);
+                    break;
+                }
+            }
+            if(signedbit == -1){
+                zeroo = (Expression *)malloc( sizeof(Expression) );
+                (zeroo->v).type = IntConst;
+                (zeroo->v).val.ivalue = -1;
+                zeroo->leftOperand = NULL ; // expr->rightOperand = parseValue(source);
+                zeroo->rightOperand = NULL ;
+                
+                value = (Expression *)malloc( sizeof(Expression) );
+                (value->v).type = MulNode;
+                (value->v).val.ivalue = 0;
+                value->leftOperand = zeroo ; // expr->rightOperand = parseValue(source);
+                value->rightOperand = parseValue(source) ;
+                expr->rightOperand = value;
+            }
+            else{
+                expr->rightOperand = parseValue(source);
+            }
             return parseTermTail(source, expr);
+            // expr->leftOperand = lvalue;
+            // expr->rightOperand = parseValue(source);
+            // return parseTermTail(source, expr);
         case PlusOp:
         case MinusOp:
         case Alphabet:
@@ -326,27 +394,98 @@ Expression *parseTermTail( FILE *source, Expression *lvalue ) {
 // Expression *parseTerm( FILE *source, Expression *lvalue );
 
 Expression *parseExpressionTail( FILE *source, Expression *lvalue )
- {
+{
+    printf("\n Tail: ");
+    print_expr(lvalue);
     Token token = scanner(source);
-    Expression *expr;
-
+    Expression *expr, *value, *zeroo;
+    int signedbit = 1;
+    Token next_token;
     switch(token.type){
         case PlusOp:
             expr = (Expression *)malloc( sizeof(Expression) );
             (expr->v).type = PlusNode;
             (expr->v).val.op = Plus;
-            expr->leftOperand = lvalue;
-            // expr->rightOperand = parseValue(source);
-            expr->rightOperand = parseTermTail(source, parseValue(source));
+            expr->leftOperand = lvalue; // expr->rightOperand = parseValue(source);
+            next_token = scanner(source);
+            while(1) {
+                if(next_token.type == PlusOp){
+                    signedbit *= 1;
+                    next_token = scanner(source);
+                }
+                else if(next_token.type == MinusOp){
+                    signedbit *= -1;
+                    next_token = scanner(source);
+                }
+                else {
+                    ungetc(next_token.tok[0], source);
+                    break;
+                }
+            }
+            if(signedbit == -1){
+                zeroo = (Expression *)malloc( sizeof(Expression) );
+                (zeroo->v).type = IntConst;
+                (zeroo->v).val.ivalue = -1;
+                zeroo->leftOperand = NULL ; // expr->rightOperand = parseValue(source);
+                zeroo->rightOperand = NULL ;
+                
+                value = (Expression *)malloc( sizeof(Expression) );
+                (value->v).type = MulNode;
+                (value->v).val.ivalue = 0;
+                value->leftOperand = zeroo ; // expr->rightOperand = parseValue(source);
+                value->rightOperand = parseValue(source) ;
+                expr->rightOperand = parseTermTail(source, value);
+            }
+            else {
+                expr->rightOperand = parseTermTail(source, parseValue(source));
+            }
             return parseExpressionTail(source, expr);
+            // expr->leftOperand = lvalue;
+            // expr->rightOperand = parseValue(source);
+            // expr->rightOperand = parseTermTail(source, parseValue(source));
+            // return parseExpressionTail(source, expr);
         case MinusOp:
             expr = (Expression *)malloc( sizeof(Expression) );
             (expr->v).type = MinusNode;
             (expr->v).val.op = Minus;
-            expr->leftOperand = lvalue;
-            // expr->rightOperand = parseValue(source);
-            expr->rightOperand = parseTermTail(source, parseValue(source));
+            expr->leftOperand = lvalue; // expr->rightOperand = parseValue(source);
+            next_token = scanner(source);
+            while(1) {
+                if(next_token.type == PlusOp){
+                    signedbit *= 1;
+                    next_token = scanner(source);
+                }
+                else if(next_token.type == MinusOp){
+                    signedbit *= -1;
+                    next_token = scanner(source);
+                }
+                else {
+                    ungetc(next_token.tok[0], source);
+                    break;
+                }
+            }
+            if(signedbit == -1){
+                zeroo = (Expression *)malloc( sizeof(Expression) );
+                (zeroo->v).type = IntConst;
+                (zeroo->v).val.ivalue = -1;
+                zeroo->leftOperand = NULL ; // expr->rightOperand = parseValue(source);
+                zeroo->rightOperand = NULL ;
+                
+                value = (Expression *)malloc( sizeof(Expression) );
+                (value->v).type = MulNode;
+                (value->v).val.ivalue = 0;
+                value->leftOperand = zeroo ; // expr->rightOperand = parseValue(source);
+                value->rightOperand = parseValue(source) ;
+                expr->rightOperand = parseTermTail(source, value);
+            }
+            else {
+                expr->rightOperand = parseTermTail(source, parseValue(source));
+            }
             return parseExpressionTail(source, expr);
+            // expr->leftOperand = lvalue;
+            // expr->rightOperand = parseValue(source);
+            // expr->rightOperand = parseTermTail(source, parseValue(source));
+            // return parseExpressionTail(source, expr);
         case MulOp:
         case DivOp:
             return parseExpressionTail(source, parseTermTail(source, expr));
@@ -364,38 +503,164 @@ Expression *parseExpressionTail( FILE *source, Expression *lvalue )
 }
 
 Expression *parseExpression( FILE *source, Expression *lvalue )
-{
+{   
+    printf("\n Expr: ");
+    
+    print_expr(lvalue);
     Token token = scanner(source);
-    Expression *expr;
+    Expression *expr, *value, *zeroo;
+    Token next_token;
+    int signedbit = 1;
     switch(token.type){
         case PlusOp:
             expr = (Expression *)malloc( sizeof(Expression) );
             (expr->v).type = PlusNode;
             (expr->v).val.op = Plus;
             expr->leftOperand = lvalue; // expr->rightOperand = parseValue(source);
-            expr->rightOperand = parseTermTail(source, parseValue(source));
+            next_token = scanner(source);
+            while(1) {
+                if(next_token.type == PlusOp){
+                    signedbit *= 1;
+                    next_token = scanner(source);
+                }
+                else if(next_token.type == MinusOp){
+                    signedbit *= -1;
+                    next_token = scanner(source);
+                }
+                else {
+                    printf("\n////unget: %c, %c///\n", next_token.tok[0],next_token.tok[1]);
+                    ungetc(next_token.tok[0], source);
+                    break;
+                }
+            }
+            if(signedbit == -1){
+                zeroo = (Expression *)malloc( sizeof(Expression) );
+                (zeroo->v).type = IntConst;
+                (zeroo->v).val.ivalue = -1;
+                zeroo->leftOperand = NULL ; // expr->rightOperand = parseValue(source);
+                zeroo->rightOperand = NULL ;
+                
+                value = (Expression *)malloc( sizeof(Expression) );
+                (value->v).type = MulNode;
+                (value->v).val.ivalue = 0;
+                value->leftOperand = zeroo ; // expr->rightOperand = parseValue(source);
+                value->rightOperand = parseValue(source) ;
+            }
+            expr->rightOperand = parseTermTail(source, value);
             return parseExpressionTail(source, expr);
         case MinusOp:
             expr = (Expression *)malloc( sizeof(Expression) );
             (expr->v).type = MinusNode;
             (expr->v).val.op = Minus;
-            expr->leftOperand = lvalue;// expr->rightOperand = parseValue(source);
-            expr->rightOperand = parseTermTail(source, parseValue(source));
+            expr->leftOperand = lvalue; // expr->rightOperand = parseValue(source);
+            next_token = scanner(source);
+            while(1) {
+                if(next_token.type == PlusOp){
+                    signedbit *= 1;
+                    next_token = scanner(source);
+                }
+                else if(next_token.type == MinusOp){
+                    signedbit *= -1;
+                    next_token = scanner(source);
+                }
+                else {
+                    ungetc(next_token.tok[0], source);
+                    break;
+                }
+            }
+            if(signedbit == -1){
+                zeroo = (Expression *)malloc( sizeof(Expression) );
+                (zeroo->v).type = IntConst;
+                (zeroo->v).val.ivalue = -1;
+                zeroo->leftOperand = NULL ; // expr->rightOperand = parseValue(source);
+                zeroo->rightOperand = NULL ;
+                
+                value = (Expression *)malloc( sizeof(Expression) );
+                (value->v).type = MulNode;
+                (value->v).val.ivalue = 0;
+                value->leftOperand = zeroo ; // expr->rightOperand = parseValue(source);
+                value->rightOperand = parseValue(source) ;
+            }
+            expr->rightOperand = parseTermTail(source, value);
             return parseExpressionTail(source, expr);
+
         // I should write a parse Del But so tired
         case MulOp:
             expr = (Expression *)malloc( sizeof(Expression) );
             (expr->v).type = MulNode;
             (expr->v).val.op = Mul;
-            expr->leftOperand = lvalue;
-            expr->rightOperand = parseValue(source);
+            expr->leftOperand = lvalue; // expr->rightOperand = parseValue(source);
+            next_token = scanner(source);
+            while(1) {
+                if(next_token.type == PlusOp){
+                    signedbit *= 1;
+                    next_token = scanner(source);
+                }
+                else if(next_token.type == MinusOp){
+                    signedbit *= -1;
+                    next_token = scanner(source);
+                }
+                else {
+                    ungetc(next_token.tok[0], source);
+                    break;
+                }
+            }
+            if(signedbit == -1){
+                zeroo = (Expression *)malloc( sizeof(Expression) );
+                (zeroo->v).type = IntConst;
+                (zeroo->v).val.ivalue = -1;
+                zeroo->leftOperand = NULL ; // expr->rightOperand = parseValue(source);
+                zeroo->rightOperand = NULL ;
+                
+                value = (Expression *)malloc( sizeof(Expression) );
+                (value->v).type = MulNode;
+                (value->v).val.ivalue = 0;
+                value->leftOperand = zeroo ; // expr->rightOperand = parseValue(source);
+                value->rightOperand = parseValue(source) ;
+                expr->rightOperand = parseTermTail(source, value);
+            }
+            else {
+                expr->rightOperand = parseValue(source);
+ 
+            }
             return parseExpressionTail(source, expr);
         case DivOp:
             expr = (Expression *)malloc( sizeof(Expression) );
             (expr->v).type = DivNode;
             (expr->v).val.op = Div;
-            expr->leftOperand = lvalue;
-            expr->rightOperand = parseValue(source);
+            expr->leftOperand = lvalue; // expr->rightOperand = parseValue(source);
+            next_token = scanner(source);
+            while(1) {
+                if(next_token.type == PlusOp){
+                    signedbit *= 1;
+                    next_token = scanner(source);
+                }
+                else if(next_token.type == MinusOp){
+                    signedbit *= -1;
+                    next_token = scanner(source);
+                }
+                else {
+                    ungetc(next_token.tok[0], source);
+                    break;
+                }
+            }
+            if(signedbit == -1){
+                zeroo = (Expression *)malloc( sizeof(Expression) );
+                (zeroo->v).type = IntConst;
+                (zeroo->v).val.ivalue = -1;
+                zeroo->leftOperand = NULL ; // expr->rightOperand = parseValue(source);
+                zeroo->rightOperand = NULL ;
+                
+                value = (Expression *)malloc( sizeof(Expression) );
+                (value->v).type = MulNode;
+                (value->v).val.ivalue = 0;
+                value->leftOperand = zeroo ; // expr->rightOperand = parseValue(source);
+                value->rightOperand = parseValue(source) ;
+                expr->rightOperand = parseTermTail(source, value);
+            }
+            else {
+                expr->rightOperand = parseValue(source);
+            }
             return parseExpressionTail(source, expr);
         case Alphabet:
         case PrintOp:
@@ -411,16 +676,57 @@ Expression *parseExpression( FILE *source, Expression *lvalue )
 
 Statement parseStatement( FILE *source, Token token )
 {
-    Token next_token;
-    Expression *value, *expr;
-
+    Token next_token, next_next_token;
+    Expression *value, *expr, *zeroo;
+    int signedbit = 1;
     switch(token.type){
         case Alphabet:
             next_token = scanner(source);
             if(next_token.type == AssignmentOp){
-                value = parseValue(source);
-                expr = parseExpression(source, value);
-                return makeAssignmentNode(token.tok, value, expr); // return makeAssignmentNode(token.tok[0], value, expr);
+                next_next_token = scanner(source);
+                if( next_next_token.type == PlusOp || next_next_token.type == MinusOp ){
+                    while(1) {
+                        if(next_next_token.type == PlusOp){
+                            signedbit *= 1;
+                            next_next_token = scanner(source);
+                        }
+                        else if(next_next_token.type == MinusOp){
+                            signedbit *= -1;
+                            next_next_token = scanner(source);
+                        }
+                        else {
+                            ungetc(next_next_token.tok[0], source);
+                            break;
+                        }
+                    }
+                    if(signedbit == -1){
+                        zeroo = (Expression *)malloc( sizeof(Expression) );
+                        (zeroo->v).type = IntConst;
+                        (zeroo->v).val.ivalue = -1;
+                        zeroo->leftOperand = NULL ; // expr->rightOperand = parseValue(source);
+                        zeroo->rightOperand = NULL ;
+                        
+                        value = (Expression *)malloc( sizeof(Expression) );
+                        (value->v).type = MulNode;
+                        (value->v).val.ivalue = 0;
+                        value->leftOperand = zeroo ; // expr->rightOperand = parseValue(source);
+                        value->rightOperand = parseValue(source) ;
+                    
+                        expr = parseExpression(source, value);
+                    }
+                    else {
+                        value = parseValue(source);
+                        expr = parseExpression(source, value);
+                    }
+                    return makeAssignmentNode(token.tok, value, expr); // return makeAssignmentNode(token.tok[0], value, expr);
+                }
+                else {
+                    /// thithithithi
+                    ungetc(next_next_token.tok[0], source);
+                    value = parseValue(source);
+                    expr = parseExpression(source, value);
+                    return makeAssignmentNode(token.tok, value, expr); // return makeAssignmentNode(token.tok[0], value, expr);
+                }
             }
             else{
                 printf("Syntax Error: Expect an assignment op %s\n", next_token.tok);
@@ -876,12 +1182,7 @@ void fprint_expr( FILE *target, Expression *expr, SymbolTable* table)
     if(expr->leftOperand == NULL){
         switch( (expr->v).type ){
             case Identifier:
-                if( (expr->v).si == -1){
-                    fprintf(target,"-1.0\n" );
-                    fprintf(target,"l%c\n", getRegister(table, (expr->v).val.id));
-                    fprintf(target,"5k\n" );
-                    fprintf(target,"*\n" );
-                }
+                fprintf(target,"l%c\n", getRegister(table, (expr->v).val.id));
                 break;
             case IntConst:
                 fprintf(target,"%d\n",(expr->v).val.ivalue);

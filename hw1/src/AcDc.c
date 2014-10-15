@@ -241,6 +241,23 @@ Declarations *parseDeclarations( FILE *source )
 
 Expression *parseValue( FILE *source )
 {
+    Token next_token = scanner(source);
+    float signedbit = 1;
+    while(1){
+        if(next_token.type == PlusOp){
+            signedbit *= 1;
+            next_token = scanner(source);
+        }
+        else if(next_token.type == MinusOp){
+            signedbit *= -1;
+            next_token = scanner(source);
+        }
+        else {
+            ungetToken(next_token);
+            break;
+        }
+    }
+
     Token token = scanner(source);
     Expression *value = (Expression *)malloc( sizeof(Expression) );
     value->leftOperand = value->rightOperand = NULL;
@@ -249,15 +266,19 @@ Expression *parseValue( FILE *source )
         case Alphabet:
             (value->v).type = Identifier; ///////////////////////////////////
             (value->v).val.id = storeName( token.tok );
+            if( signedbit == -1)
+                (value->v).si = -1;
+            else
+                (value->v).si = 1;
             // (value->v).val.id = token.tok[0];
             break;
         case IntValue:
             (value->v).type = IntConst;
-            (value->v).val.ivalue = atoi(token.tok);
+            (value->v).val.ivalue = atoi(token.tok) * signedbit;
             break;
         case FloatValue:
             (value->v).type = FloatConst;
-            (value->v).val.fvalue = atof(token.tok);
+            (value->v).val.fvalue = atof(token.tok) * signedbit;
             break;
         default:
             printf("Syntax Error: Expect Identifier or a Number %s\n", token.tok);
@@ -855,7 +876,12 @@ void fprint_expr( FILE *target, Expression *expr, SymbolTable* table)
     if(expr->leftOperand == NULL){
         switch( (expr->v).type ){
             case Identifier:
-                fprintf(target,"l%c\n", getRegister(table, (expr->v).val.id));
+                if( (expr->v).si == -1){
+                    fprintf(target,"-1.0\n" );
+                    fprintf(target,"l%c\n", getRegister(table, (expr->v).val.id));
+                    fprintf(target,"5k\n" );
+                    fprintf(target,"*\n" );
+                }
                 break;
             case IntConst:
                 fprintf(target,"%d\n",(expr->v).val.ivalue);
