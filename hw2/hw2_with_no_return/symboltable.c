@@ -10,6 +10,8 @@
 symtab * hash_table[TABLE_SIZE];
 extern int linenumber;
 
+int totalID=0;
+
 int HASH(char * str){
 	int idx=0;
 	while(*str){
@@ -40,6 +42,7 @@ symtab * lookup(char *name){
 
 
 void insertID(char *name){
+	totalID++;
 	int hash_key;
 	symtab* ptr;
 	symtab* symptr=(symtab*)malloc(sizeof(symtab));
@@ -54,10 +57,20 @@ void insertID(char *name){
 		symptr->back=symptr;
 	}
 	else{
-		symptr->front=ptr;
-		ptr->back=symptr;
-		symptr->back=symptr;
-		hash_table[hash_key]=symptr;
+		// if( strcmp( ptr->lexeme, symptr->lexeme) < 0 ) {
+			symptr->front=ptr;
+			ptr->back=symptr;
+			symptr->back=symptr;
+			hash_table[hash_key]=symptr;
+		// }
+		// else {
+		// 	while( strcmp( ptr->lexeme, symptr->lexeme) > 0){
+		// 		ptr = ptr->back;
+		// 	}
+	 	// 	symptr->front=ptr;
+		// 	ptr->back=symptr;
+		// 	symptr->back=symptr;
+		// }
 	}
 
 	strcpy(symptr->lexeme,name);
@@ -71,10 +84,15 @@ void printSym(symtab* ptr)
 	    printf(" References = %d \n", ptr->counter);
 }
 
+int compare_nodeptr(const void* left, const void* right)
+{
+		return strcmp( (*(symtab**)left)->lexeme, (*(symtab**)right)->lexeme);
+}
+
 void printSymTab()
 {
     int i;
-		
+/*
     printf("----- Symbol Table ---------\n");
     for (i=0; i<TABLE_SIZE; i++)
     {
@@ -82,12 +100,29 @@ void printSymTab()
 	symptr = hash_table[i];
 	while (symptr != NULL)
 	{
-      // printf("====>  index = %d \n", i);
-	    // printSym(symptr);
-	    printf("%s\t%d\n", symptr->lexeme,  symptr->counter);
-			symptr=symptr->front;
+      printf("====>  index = %d \n", i);
+	    printSym(symptr);
+	    symptr=symptr->front;
 	}
     }
-		printf("Frequency of identifiers: \n");
+*/
 
+		printf("Frequency of identifiers: \n");
+		symtab ** nodeList = malloc( totalID * sizeof(symtab *)); // 300 is random;
+		int idx = 0;
+		for( i=0; i<TABLE_SIZE; i++){
+			symtab* p;
+			p = hash_table[i];
+			while(p != NULL) {
+				// printf("%s\t%d\n", p->lexeme,  p->counter);
+				nodeList[idx++] = p;
+				p = p->front;
+			}
+		}
+		qsort( nodeList, totalID, sizeof(symtab *), compare_nodeptr);
+
+		for( i=0; i<totalID; ++i)
+			printf("%s\t%d\n", nodeList[i]->lexeme, nodeList[i]->counter);
+
+		free(nodeList);
 }
