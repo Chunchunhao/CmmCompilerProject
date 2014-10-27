@@ -553,7 +553,7 @@ char *yytext;
 #line 3 "lexer.l"
 #include <stdio.h>
 #include "header.h"
-int linenumber;
+int linenumber=1;
 symtab * lookup();
 symtab * ptr;
 void     insertID();
@@ -970,151 +970,160 @@ case 17:
 /* rule 17 can match eol */
 YY_RULE_SETUP
 #line 156 "lexer.l"
-{printf("%s\n", yytext); /*return R_COMMENT;*/}
+{
+	printf("%s\n", yytext);
+	int i;
+	for( i=0; i < yyleng; i++){
+		if( yytext[i] == '\n')
+			linenumber += 1;
+	}
+	/*return R_COMMENT;*/
+
+}
 	YY_BREAK
 case 18:
 /* rule 18 can match eol */
 YY_RULE_SETUP
-#line 157 "lexer.l"
+#line 166 "lexer.l"
 {printf("%s\n", yytext); /*return R_COMMENT;*/}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 159 "lexer.l"
+#line 168 "lexer.l"
 {/*return R_OPADD;*/}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 160 "lexer.l"
+#line 169 "lexer.l"
 {/*return R_OPSUB;*/}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 161 "lexer.l"
+#line 170 "lexer.l"
 {/*return R_OPMUL;*/}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 162 "lexer.l"
+#line 171 "lexer.l"
 {/*return R_OPDIV;*/}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 163 "lexer.l"
+#line 172 "lexer.l"
 {/*return R_OPMOD;*/}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 165 "lexer.l"
+#line 174 "lexer.l"
 {/*return R_ROLT;*/}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 166 "lexer.l"
+#line 175 "lexer.l"
 {/*return R_ROGT;*/}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 167 "lexer.l"
+#line 176 "lexer.l"
 {/*return R_ROLTE;*/}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 168 "lexer.l"
+#line 177 "lexer.l"
 {/*return R_ROGTE;*/}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 169 "lexer.l"
+#line 178 "lexer.l"
 {/*return R_RONE;*/}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 170 "lexer.l"
+#line 179 "lexer.l"
 {/*return R_ROEQ;*/}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 172 "lexer.l"
+#line 181 "lexer.l"
 {/*return R_LOOR;*/}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 173 "lexer.l"
+#line 182 "lexer.l"
 {/*return R_LOAND;*/}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 174 "lexer.l"
+#line 183 "lexer.l"
 {/*return R_LONOT;*/}
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 176 "lexer.l"
+#line 185 "lexer.l"
 {/*return R_OPASS;*/}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 179 "lexer.l"
+#line 188 "lexer.l"
 {/*return R_MK_LPAREN;*/}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 180 "lexer.l"
+#line 189 "lexer.l"
 {/*return R_MK_RPAREN;*/}
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 181 "lexer.l"
+#line 190 "lexer.l"
 {/*return R_MK_LBRACE;*/}
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 182 "lexer.l"
+#line 191 "lexer.l"
 {/*return R_MK_RBRACE;*/}
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 183 "lexer.l"
+#line 192 "lexer.l"
 {/*return R_MK_LBRAKET;*/}
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 184 "lexer.l"
+#line 193 "lexer.l"
 {/*return R_MK_RBRAKET;*/}
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 186 "lexer.l"
+#line 195 "lexer.l"
 {/*return R_MK_COMMA;*/}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 187 "lexer.l"
+#line 196 "lexer.l"
 {/*return R_MK_SEMICOL;*/}
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 188 "lexer.l"
+#line 197 "lexer.l"
 {/*return R_MK_DOT;*/}
 	YY_BREAK
 case 43:
 /* rule 43 can match eol */
 YY_RULE_SETUP
-#line 189 "lexer.l"
+#line 198 "lexer.l"
 {linenumber += 1;}
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 190 "lexer.l"
+#line 199 "lexer.l"
 {printf("Unrecognize token on %d : %s\n", linenumber,  yytext); return R_ERROR;}
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 192 "lexer.l"
+#line 201 "lexer.l"
 ECHO;
 	YY_BREAK
-#line 1118 "lex.yy.c"
+#line 1127 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2111,7 +2120,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 192 "lexer.l"
+#line 201 "lexer.l"
 
 
 
@@ -2122,7 +2131,9 @@ int main(int argc, char **argv)
       yyin = fopen(argv[0], "r");
    else
       yyin = stdin;
-   yylex();
+   if( R_ERROR == yylex() ) {
+		return -1;
+	 }
    printSymTab();
 }
 

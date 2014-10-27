@@ -2,7 +2,7 @@
 %{
 #include <stdio.h>
 #include "header.h"
-int linenumber;
+int linenumber=1;
 symtab * lookup();
 symtab * ptr;
 void     insertID();
@@ -153,7 +153,16 @@ error    .
 			/*return R_ID*/;
 		 }
 
-{comment}	{printf("%s\n", yytext); /*return R_COMMENT;*/}
+{comment}	{
+	printf("%s\n", yytext);
+	int i;
+	for( i=0; i < yyleng; i++){
+		if( yytext[i] == '\n')
+			linenumber += 1;
+	}
+	/*return R_COMMENT;*/
+
+}
 {line_comment} {printf("%s\n", yytext); /*return R_COMMENT;*/}
 
 {OP_add} {/*return R_OPADD;*/}
@@ -198,6 +207,8 @@ int main(int argc, char **argv)
       yyin = fopen(argv[0], "r");
    else
       yyin = stdin;
-   yylex();
+   if( R_ERROR == yylex() ) {
+		return -1;
+	 }
    printSymTab();
 }
